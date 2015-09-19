@@ -1,7 +1,15 @@
 name:                streaming-utils
 version:             0.1.0.1
 synopsis:            http, attoparsec and pipes utilities for streaming and streaming-bytestring
-description:         Experimental http-client, attoparsec and pipes utilities streaming and streaming-bytestring
+description:         Experimental http-client, attoparsec and pipes utilities for use with
+                     the <http://hackage.haskell.org/package/streaming streaming> and 
+                     <http://hackage.haskell.org/package/streaming-bytestring streaming bytestring> libraries.
+                     Other modules are planned. 
+                     .
+                     This package of course heaps together a number of dependencies. 
+                     Please raise an issue if this is a problem. Questions about usage can be
+                     raised as issue or addressed to the 
+                     <https://groups.google.com/forum/#!forum/haskell-pipes pipes list>.
 
 license:             BSD3
 license-file:        LICENSE
@@ -12,6 +20,13 @@ category:            Data
 build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
+stability:           Experimental
+homepage:            https://github.com/michaelt/streaming-utils
+bug-reports:         https://github.com/michaelt/streaming-utils/issues
+category:            Data, Pipes, Streaming
+source-repository head
+    type: git
+    location: https://github.com/michaelt/streaming-utils
 
 library
   exposed-modules:     Data.Attoparsec.ByteString.Streaming,
