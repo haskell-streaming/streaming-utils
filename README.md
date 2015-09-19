@@ -6,4 +6,5 @@ experimental http, attoparsec and pipes material for `streaming` and `streaming-
 `streaming bytestring` just replicates `Pipes.HTTP` (barely a character is changed) so that exchange
 is via `ByteString m r` rather than @Producer ByteString m r`.
 
-`Streaming.Attoparsec` pretty much replicates Renzo Carbonara's `Pipes.Attoparsec` module.
+`Streaming.Attoparsec` pretty much replicates Renzo Carbonara's `Pipes.Attoparsec` module. It permits parsing an effectful bytestring with an attoparsec parsec, and also the
+(streaming) conversion of an effectful bytestring into stream of parsed values.
