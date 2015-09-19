@@ -20,7 +20,7 @@ library
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
   
-  build-depends:       base >=4.7 && <4.9, 
+  build-depends:       base >=4.6 && <4.9, 
                        transformers >=0.4 && <0.5, 
                        mtl >=2.2 && <2.3,
                        attoparsec,
