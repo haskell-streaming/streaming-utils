@@ -21,12 +21,12 @@ library
   other-extensions:    CPP, Trustworthy
   
   build-depends:       base >=4.7 && <4.9, 
-                       bytestring >=0.10 && <0.11, 
                        transformers >=0.4 && <0.5, 
                        mtl >=2.2 && <2.3,
                        attoparsec,
-                       streaming,
-                       streaming-bytestring,
+                       streaming > 0.1.0.15 && < 0.1.1,
+                       streaming-bytestring > 0.1.0.5 && < 0.1.1,
+                       bytestring, 
                        pipes >= 4.0 && < 4.2,
                        http-client >=0.2 && <0.5, 
                        http-client-tls <0.3
