@@ -1,5 +1,5 @@
 name:                streaming-utils
-version:             0.1.0.1
+version:             0.1.1.0
 synopsis:            http, attoparsec and pipes utilities for streaming and streaming-bytestring
 description:         Experimental http-client, attoparsec and pipes utilities for use with
                      the <http://hackage.haskell.org/package/streaming streaming> and 
@@ -7,8 +7,9 @@ description:         Experimental http-client, attoparsec and pipes utilities fo
                      Other modules are planned. 
                      .
                      This package of course heaps together a number of dependencies. 
-                     Please raise an issue if this is a problem. Questions about usage can be
-                     raised as issue or addressed to the 
+                     Please raise an issue if this is a problem. 
+                     .
+                     Questions about usage can be raised as issues, or addressed to the 
                      <https://groups.google.com/forum/#!forum/haskell-pipes pipes list>.
 
 license:             BSD3
@@ -31,6 +32,7 @@ source-repository head
 library
   exposed-modules:     Data.Attoparsec.ByteString.Streaming,
                        Data.ByteString.Streaming.HTTP,
+                       Data.ByteString.Streaming.Aeson,
                        Streaming.Pipes
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
@@ -39,12 +41,14 @@ library
                        transformers >=0.4 && <0.5, 
                        mtl >=2.2 && <2.3,
                        attoparsec,
-                       streaming > 0.1.0.15 && < 0.1.1,
-                       streaming-bytestring > 0.1.0.5 && < 0.1.1,
+                       streaming > 0.1.0.15 && < 0.1.2,
+                       streaming-bytestring > 0.1.0.5 && < 0.1.2,
                        bytestring, 
                        pipes >= 4.0 && < 4.2,
                        http-client >=0.2 && <0.5, 
-                       http-client-tls <0.3
+                       http-client-tls <0.3,
+                       aeson,
+                       json-stream == 0.3.2.*
                        
                       
   -- hs-source-dirs:      
