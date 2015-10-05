@@ -118,7 +118,8 @@ decoded = consecutively decode
               if S.null a' then nextSkipBlank p1
                            else return (Right (a', p1))
 
-{- | Parse a bytestring with a @json-streams@ parser. The function will read through
+{- | Experimental. Parse a bytestring with a @json-streams@ parser. 
+     The function will read through
      the whole of a single top level json entity, streaming the valid parses as they
      arise. (It will thus for example parse an infinite json bytestring, though these
      are rare in practice ...) If the parser is fitted to recognize only one thing, 
