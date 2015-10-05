@@ -37,10 +37,10 @@ library
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
   
-  build-depends:       base >=4.7.0 && <4.9, 
+  build-depends:       base >=4.7 && <4.9, 
                        transformers >=0.4 && <0.5, 
                        mtl >=2.2 && <2.3,
-                       attoparsec,
+                       attoparsec >=0.13.0.1,
                        streaming > 0.1.0.20 && < 0.1.1.2,
                        streaming-bytestring > 0.1.0.8 && < 0.1.1.2,
                        bytestring, 
