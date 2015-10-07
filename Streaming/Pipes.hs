@@ -48,6 +48,7 @@ module Streaming.Pipes (
   
   -- * Streaming division of a 'Producer' into two
   span,
+  break,
   splitAt,
   group,
   groupBy,
@@ -56,6 +57,8 @@ module Streaming.Pipes (
   groupsBy,
   groupsBy',
   groups,
+  split,
+  breaks,
   
   -- * Rejoining a connected stream of 'Producer's
   concats, 
@@ -77,7 +80,7 @@ import qualified Pipes as P
 
 import qualified Streaming.Prelude as S
 import Control.Monad (liftM)
-import Prelude hiding (span, splitAt)
+import Prelude hiding (span, splitAt, break)
 
 -- | Construct an ordinary pipes 'Producer' from a 'Stream' of elements
 produce :: Monad m => Stream (Of a) m r -> Producer' a m r
@@ -113,6 +116,35 @@ span predicate = loop where
           then yield a >> loop p'
           else return (yield a >> p')
 {-# INLINABLE span #-}
+
+break :: Monad m => (a -> Bool) -> Producer a m r -> Producer a m (Producer a m r)
+break predicate = span (not . predicate)
+
+split :: (Eq a, Monad m) =>
+      a -> Producer a m r -> Stream (Producer a m) m r
+split t  = loop  where
+  loop stream = do
+    e <- lift $ next stream
+    case e of
+      Left   r      ->  SI.Return r
+      Right (a, p') -> 
+        if a /= t
+          then SI.Step $ fmap loop (yield a >> span (/= t) p')
+          else loop p'
+{-#INLINABLE split #-}
+
+breaks :: (Eq a, Monad m) =>
+      (a -> Bool) -> Producer a m r -> Stream (Producer a m) m r
+breaks predicate  = loop  where
+  loop stream = do
+    e <- lift $ next stream
+    case e of
+      Left   r      ->  SI.Return r
+      Right (a, p') -> 
+        if not (predicate a)
+          then SI.Step $ fmap loop (yield a >> break (predicate) p')
+          else loop p'
+{-#INLINABLE breaks #-}
 
 {-| 'splitAt' divides a 'Producer' into two 'Producer's 
     after a fixed number of elements. Its inverse is 'Control.Monad.join'
