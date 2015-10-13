@@ -1,7 +1,7 @@
 name:                streaming-utils
-version:             0.1.1.0
-synopsis:            http, attoparsec and pipes utilities for streaming and streaming-bytestring
-description:         Experimental http-client, attoparsec and pipes utilities for use with
+version:             0.1.1.1
+synopsis:            http, attoparsec, pipes and conduit utilities for the streaming libraries
+description:         Experimental http-client, attoparsec, conduit pipes utilities for use with
                      the <http://hackage.haskell.org/package/streaming streaming> and 
                      <http://hackage.haskell.org/package/streaming-bytestring streaming bytestring> libraries.
                      Other modules are planned. 
@@ -33,7 +33,8 @@ library
   exposed-modules:     Data.Attoparsec.ByteString.Streaming,
                        Data.ByteString.Streaming.HTTP,
                        Data.ByteString.Streaming.Aeson,
-                       Streaming.Pipes
+                       Streaming.Pipes,
+                       Streaming.Conduit
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
   
@@ -48,7 +49,8 @@ library
                        http-client >=0.2 && <0.5, 
                        http-client-tls <0.3,
                        aeson,
-                       json-stream == 0.3.2.*
+                       json-stream == 0.3.2.*,
+                       conduit
                        
                       
   -- hs-source-dirs:      

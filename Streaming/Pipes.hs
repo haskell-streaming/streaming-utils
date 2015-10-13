@@ -38,8 +38,10 @@
 
 module Streaming.Pipes (
   -- * @Streaming@ \/ @Pipes@ interoperation
-  produce,
-  stream,
+  fromStream,
+  toStream,
+  toStreamingByteString,
+  fromStreamingByteString,
   
   -- * Transforming a connected stream of 'Producer's
   takes,
@@ -81,25 +83,50 @@ import qualified Pipes as P
 import qualified Streaming.Prelude as S
 import Control.Monad (liftM)
 import Prelude hiding (span, splitAt, break)
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Streaming as Q
+import qualified Data.ByteString.Streaming.Internal as Q
+
 
 -- | Construct an ordinary pipes 'Producer' from a 'Stream' of elements
-produce :: Monad m => Stream (Of a) m r -> Producer' a m r
-produce = loop where
+fromStream :: Monad m => Stream (Of a) m r -> Producer' a m r
+fromStream = loop where
   loop stream = case stream of -- this should be rewritten without constructors
     SI.Return r -> PI.Pure r
     SI.Delay m  -> PI.M (liftM loop m)
     SI.Step (a:>rest) -> PI.Respond a  (\_ -> loop rest)
-{-# INLINABLE produce #-}
+{-# INLINABLE fromStream #-}
 
 -- | Construct a 'Stream' of elements from a @pipes@ 'Producer'
-stream :: Monad m => Producer a m r -> Stream (Of a) m r
-stream = loop where
+toStream :: Monad m => Producer a m r -> Stream (Of a) m r
+toStream = loop where
   loop stream = case stream of
     PI.Pure r -> SI.Return r 
     PI.M m -> SI.Delay (liftM loop m)
     PI.Respond a f -> SI.Step (a :> loop (f ()))
     PI.Request x g -> PI.closed x
-{-# INLINABLE stream #-}
+{-# INLINABLE toStream #-}
+
+
+toStreamingByteString :: Monad m => Producer B.ByteString m r -> Q.ByteString m r
+toStreamingByteString = loop where
+  loop stream = case stream of
+    PI.Pure r -> Q.Empty r 
+    PI.M m    -> Q.Go (liftM loop m)
+    PI.Respond a f -> Q.Chunk a (loop (f ()))
+    PI.Request x g -> PI.closed x
+{-# INLINABLE toStreamingByteString #-}
+
+
+fromStreamingByteString :: Monad m => Q.ByteString m r -> Producer' B.ByteString m r
+fromStreamingByteString = loop where
+  loop stream = case stream of -- this should be rewritten without constructors
+    Q.Empty r      -> PI.Pure r
+    Q.Go m         -> PI.M (liftM loop m)
+    Q.Chunk a rest -> PI.Respond a  (\_ -> loop rest)
+{-# INLINABLE fromStreamingByteString #-}
+
+
 
 {-| 'span' splits a 'Producer' into two 'Producer's; the outer 'Producer' 
     is the longest consecutive group of elements that satisfy the predicate.
