@@ -73,7 +73,7 @@ module Streaming.Pipes (
   ) where
 
 import Pipes
-import Streaming hiding (concats)
+import Streaming hiding (concats, groups)
 import qualified Streaming.Internal as SI
 import qualified Pipes.Internal as PI
 import qualified Pipes.Prelude as P
