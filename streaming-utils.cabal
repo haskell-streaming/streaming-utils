@@ -33,8 +33,7 @@ library
   exposed-modules:     Data.Attoparsec.ByteString.Streaming,
                        Data.ByteString.Streaming.HTTP,
                        Data.ByteString.Streaming.Aeson,
-                       Streaming.Pipes,
-                       Streaming.Conduit
+                       Streaming.Pipes
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
   
@@ -49,8 +48,7 @@ library
                        http-client >=0.2 && <0.5, 
                        http-client-tls <0.3,
                        aeson,
-                       json-stream == 0.3.2.*,
-                       conduit
+                       json-stream == 0.3.2.*
                        
                       
   -- hs-source-dirs:      
