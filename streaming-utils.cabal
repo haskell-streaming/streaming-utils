@@ -1,5 +1,5 @@
 name:                streaming-utils
-version:             0.1.2.0
+version:             0.1.2.2
 synopsis:            http, attoparsec, pipes and conduit utilities for the streaming libraries
 description:         Experimental http-client, attoparsec, conduit pipes utilities for use with
                      the <http://hackage.haskell.org/package/streaming streaming> and 
@@ -41,8 +41,8 @@ library
                        transformers >=0.4 && <0.5, 
                        mtl >=2.2 && <2.3,
                        attoparsec >=0.13.0.1,
-                       streaming > 0.1.1.1 && < 0.1.2.2,
-                       streaming-bytestring > 0.1.1.1 && < 0.1.2.2,
+                       streaming > 0.1.2.0 && < 0.1.2.4,
+                       streaming-bytestring  > 0.1.2.0 && < 0.1.2.4,
                        bytestring, 
                        pipes >= 4.0 && < 4.2,
                        http-client >=0.2 && <0.5, 
