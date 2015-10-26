@@ -93,7 +93,7 @@ fromStream :: Monad m => Stream (Of a) m r -> Producer' a m r
 fromStream = loop where
   loop stream = case stream of -- this should be rewritten without constructors
     SI.Return r -> PI.Pure r
-    SI.Delay m  -> PI.M (liftM loop m)
+    SI.Effect m  -> PI.M (liftM loop m)
     SI.Step (a:>rest) -> PI.Respond a  (\_ -> loop rest)
 {-# INLINABLE fromStream #-}
 
@@ -102,7 +102,7 @@ toStream :: Monad m => Producer a m r -> Stream (Of a) m r
 toStream = loop where
   loop stream = case stream of
     PI.Pure r -> SI.Return r 
-    PI.M m -> SI.Delay (liftM loop m)
+    PI.M m -> SI.Effect (liftM loop m)
     PI.Respond a f -> SI.Step (a :> loop (f ()))
     PI.Request x g -> PI.closed x
 {-# INLINABLE toStream #-}
@@ -216,7 +216,7 @@ groupsBy
     => (a -> a -> Bool)
     -> Producer a m r -> Stream (Producer a m) m r 
 groupsBy equals = loop where
-  loop p = SI.Delay $ do
+  loop p = SI.Effect $ do
     e <- next p
     return $ case e of
       Left   r      -> SI.Return r
@@ -241,7 +241,7 @@ groupsBy'
     :: Monad m
     => (a -> a -> Bool) -> Producer a m r -> Stream (Producer a m) m r
 groupsBy' equals = loop where
-  loop p = SI.Delay $ do
+  loop p = SI.Effect $ do
     e <- next p
     return $ case e of
       Left   r      -> SI.Return r
@@ -272,7 +272,7 @@ groups = groupsBy (==)
 chunksOf
     :: Monad m => Int -> Producer a m r -> Stream (Producer a m) m r
 chunksOf n = loop where
-  loop p = SI.Delay $ do
+  loop p = SI.Effect $ do
     e <- next p
     return $ case e of
       Left   r      -> SI.Return r
@@ -284,7 +284,7 @@ concats :: Monad m => Stream (Producer a m) m r -> Producer a m r
 concats = loop where
   loop stream = case stream of
     SI.Return r -> return r
-    SI.Delay m -> PI.M $ liftM loop m
+    SI.Effect m -> PI.M $ liftM loop m
     SI.Step p -> do 
       rest <- p
       loop rest 
@@ -351,7 +351,7 @@ folds
 folds step begin done = loop where
   loop stream = case stream of 
     SI.Return r -> return r
-    SI.Delay m  -> PI.M $ liftM loop m
+    SI.Effect m  -> PI.M $ liftM loop m
     SI.Step p   -> do
         (stream', b) <- lift (fold p begin)
         yield b
@@ -384,7 +384,7 @@ foldsM
 foldsM step begin done = loop where
   loop stream = case stream of 
     SI.Return r -> return r
-    SI.Delay m -> PI.M (liftM loop m)
+    SI.Effect m -> PI.M (liftM loop m)
     SI.Step p -> do
       (f', b) <- lift $ begin >>=  foldM p 
       yield b
@@ -414,13 +414,13 @@ takes' = loop where
   loop !n stream | n <= 0 = drain_loop stream
   loop n stream = case stream of
     SI.Return r -> SI.Return r
-    SI.Delay  m -> SI.Delay (liftM (loop n) m)
+    SI.Effect  m -> SI.Effect (liftM (loop n) m)
     SI.Step p   -> SI.Step  (fmap (loop (n - 1)) p)
 
   drain_loop stream = case stream of
     SI.Return r -> SI.Return r
-    SI.Delay  m -> SI.Delay (liftM drain_loop m)
-    SI.Step p   -> SI.Delay $ do 
+    SI.Effect  m -> SI.Effect (liftM drain_loop m)
+    SI.Step p   -> SI.Effect $ do 
       stream' <- runEffect (P.for p P.discard)
       return $ drain_loop stream'
 {-# INLINABLE takes' #-}

@@ -200,7 +200,7 @@ chunksOf m con = loop m (unConduitM con Done) where
 
   loop m p = case p of
       Done r               -> return r
-      PipeM msrc           -> S.Delay $ liftM (loop m) msrc
+      PipeM msrc           -> S.Effect $ liftM (loop m) msrc
       NeedInput _ c        -> loop m (c ())
       Leftover src ()      -> loop m src
       HaveOutput src x a   -> S.wrap $ ConduitM $ \r2pipe -> do
