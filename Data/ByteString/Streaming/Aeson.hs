@@ -74,6 +74,10 @@ instance Exception DecodingError
 encode :: (Monad m, Ae.ToJSON a) => a -> ByteString m ()
 encode = fromLazy . Ae.encode
 
+
+{-| Given a bytestring, parse a top level json entity - returning any leftover
+    bytes. 
+-}
 decode
   :: (Monad m, Ae.FromJSON a)
   => StateT (ByteString m x) m (Either DecodingError a)
@@ -85,6 +89,10 @@ decode = do
             Ae.Error e   -> Left (FromJSONError e)
             Ae.Success a -> Right a
 
+{-| Resolve a succession of top-level json items into a corresponding stream of Haskell
+    values. 
+            
+-}
 decoded  :: (Monad m, Ae.FromJSON a) =>
      ByteString m r
      -> Stream (Of a) m (Either (DecodingError, ByteString m r) r)
@@ -121,10 +129,14 @@ decoded = consecutively decode
 {- | Experimental. Parse a bytestring with a @json-streams@ parser. 
      The function will read through
      the whole of a single top level json entity, streaming the valid parses as they
-     arise. (It will thus for example parse an infinite json bytestring, thougEffecth these
-     are rare in practice ...) If the parser is fitted to recognize only one thing, 
+     arise. (It will thus for example parse an infinite json bytestring, though these
+     are rare in practice ...) 
+                           
+     If the parser is fitted to recognize only one thing, 
      then zero or one item will be yielded; if it uses combinators like @arrayOf@, 
-     it will stream many values as they arise. This function is modelled on 
+     it will stream many values as they arise. 
+                           
+     This function is closely modelled on 
      'Data.JsonStream.Parser.parseByteString' and 
      'Data.JsonStream.Parser.parseLazyByteString'
                            

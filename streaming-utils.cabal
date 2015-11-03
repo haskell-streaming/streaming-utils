@@ -48,7 +48,7 @@ library
                        http-client >=0.2 && <0.5, 
                        http-client-tls <0.3,
                        aeson,
-                       json-stream == 0.3.2.*
+                       json-stream == 0.4.0.*
                        
                       
   -- hs-source-dirs:      
