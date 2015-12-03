@@ -1,3 +1,4 @@
+{-#LANGUAGE OverloadedStrings #-}
 -- | This module replicates `pipes-http` as closely as will type-check.
 -- 
 --   Here is an example GET request that streams the response body to standard
@@ -42,6 +43,7 @@ module Data.ByteString.Streaming.HTTP (
     , withHTTP
     , streamN
     , stream
+    , simpleHttp
 
     ) where
 
@@ -122,7 +124,7 @@ to p0 k = do
                     return bs
     k readAction 
 
-from :: IO B.ByteString -> ByteString IO ()
+-- from :: IO B.ByteString -> ByteString IO ()
 from io = go
   where
     go = do
@@ -130,3 +132,15 @@ from io = go
         unless (B.null bs) $ do
             chunk bs
             go 
+            
+
+-- simpleHttp :: MonadIO m => String -> ByteString m ()
+simpleHttp url = do
+    man <- liftIO (newManager tlsManagerSettings)
+    req <- liftIO (parseUrl url)
+    from (withResponse req man responseBody)
+ where
+ setConnectionClose :: Request -> Request
+ setConnectionClose req = req{requestHeaders = ("Connection", "close") : requestHeaders req}
+
+            
