@@ -43,7 +43,6 @@ module Data.ByteString.Streaming.HTTP (
     , withHTTP
     , streamN
     , stream
-    , simpleHttp
 
     ) where
 
@@ -133,14 +132,16 @@ from io = go
             chunk bs
             go 
             
-
--- simpleHttp :: MonadIO m => String -> ByteString m ()
-simpleHttp url = do
-    man <- liftIO (newManager tlsManagerSettings)
-    req <- liftIO (parseUrl url)
-    from (withResponse req man responseBody)
- where
- setConnectionClose :: Request -> Request
- setConnectionClose req = req{requestHeaders = ("Connection", "close") : requestHeaders req}
+-- {-| This is a quick method - oleg would call it \'unprofessional\' - to bring a web page in view.
+--
+-- -}
+-- simpleHttp :: String -> ByteString m ()
+-- simpleHttp url = do
+--     man <- liftIO (newManager tlsManagerSettings)
+--     req <- liftIO (parseUrl url)
+--     from (withResponse req man responseBody)
+--  where
+--  setConnectionClose :: Request -> Request
+--  setConnectionClose req = req{requestHeaders = ("Connection", "close") : requestHeaders req}
 
             
