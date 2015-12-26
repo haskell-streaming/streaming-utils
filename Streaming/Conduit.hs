@@ -48,7 +48,7 @@ module Streaming.Conduit (
   -- * Performing only the effects of a conduit producer, preserving its return value
   , drain
   , drained
-  
+
   -- * Apply a Conduit a b m () to a conduit
   , ($$$)
   , applyConduit
@@ -226,14 +226,14 @@ splitAt n c = ConduitM $ \k -> do
           NeedInput _ c        -> loop n (c ())
           Leftover src ()      -> loop n src
           HaveOutput src x a   -> HaveOutput (loop (n-1) src) x a
-    
+
 
 unfoldr :: Monad m
    => (s -> m (Either r (a, s))) -> s -> ConduitM () a m r
 unfoldr f s = ConduitM (loop s >>=) where
 
   loop seed = do
-    e <- lift (f seed )
+    e <- lift (f seed)
     case e of
       Right (a, seed') -> do
         pipeYield a
@@ -280,7 +280,7 @@ span pred c =  ConduitM $ \k -> do
         then pipeYield a >> pipeSpan rest
         else return (pipeYield a >> rest)
 {-#INLINE span  #-}
-        
+
 pipeYield :: Monad m => o -> Pipe l i o u m ()
 pipeYield = HaveOutput (return ()) (return ())
 

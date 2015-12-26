@@ -43,7 +43,14 @@ module Data.ByteString.Streaming.HTTP (
     , withHTTP
     , streamN
     , stream
+    
+    -- * ghci testing
+    , simpleHTTP
 
+    -- * re-exports
+    , ResourceT (..)
+    , MonadResource (..)
+    , runResourceT
     ) where
 
 import Control.Monad (unless)
@@ -55,6 +62,7 @@ import Network.HTTP.Client.TLS
 import Data.ByteString.Streaming
 import Data.ByteString.Streaming.Internal
 import Control.Monad.Trans
+import Control.Monad.Trans.Resource
 
 {- $httpclient
     This module is a thin @streaming-bytestring@ wrapper around the @http-client@ and
@@ -132,16 +140,53 @@ from io = go
             chunk bs
             go 
             
--- {-| This is a quick method - oleg would call it \'unprofessional\' - to bring a web page in view.
---
--- -}
--- simpleHttp :: String -> ByteString m ()
--- simpleHttp url = do
---     man <- liftIO (newManager tlsManagerSettings)
---     req <- liftIO (parseUrl url)
---     from (withResponse req man responseBody)
---  where
---  setConnectionClose :: Request -> Request
---  setConnectionClose req = req{requestHeaders = ("Connection", "close") : requestHeaders req}
+{-| This is a quick method - oleg would call it \'unprofessional\' - to bring a web page in view.
+    It sparks its own internal manager and closes itself. Thus something like this makes sense
+
+>>> runResourceT $ Q.putStrLn $ simpleHttp "http://lpaste.net/raw/12"
+chunk _ [] = []
+chunk n xs = let h = take n xs in h : (chunk n (drop n xs))
+            
+    but if you try something like
+
+>>> rest <- runResourceT $ Q.putStrLn $ Q.splitAt 40 $ simpleHTTP "http://lpaste.net/raw/146532"
+import Data.ByteString.Streaming.HTTP 
+
+    it will just be good luck if with 
+            
+>>> runResourceT $ Q.putStrLn rest
+            
+    you get the rest of the file: 
+            
+> import qualified Data.ByteString.Streaming.Char8 as Q
+> main = runResourceT $ Q.putStrLn $ simpleHTTP "http://lpaste.net/raw/146532"
+ 
+    rather than 
+            
+> *** Exception: <socket: 13>: hGetBuf: illegal operation (handle is closed)
+            
+    Since, of course, the handle was already closed by the first use of @runResourceT@.
+    The same applies of course to the more hygienic 'withHTTP' above, 
+    which permits one to extract an @IO (ByteString IO r)@, by using @splitAt@ or
+    the like. 
+            
+    The reaction of some streaming-io libraries was simply to forbid
+    operations like @splitAt@. That this paternalism was not viewed
+    as simply outrageous is a consequence of the opacity of the
+    older iteratee-io libraries. It is /obvious/ that I can no more run an
+    effectful bytestring after I have made its effects impossible by
+    using @runResourceT@ (which basically means @closeEverythingDown@). 
+    I might as well try to run it after tossing my machine into the flames. 
+    Similarly, it is obvious that I cannot read from a handle after I have 
+    applied @hClose@; there is simply no difference between the two cases.
+-}
+simpleHTTP :: MonadResource m => String -> ByteString m ()
+simpleHTTP url = do
+    man <- liftIO (newManager tlsManagerSettings)
+    req <- liftIO (parseUrl url)
+    bracketByteString 
+       (responseOpen req man) 
+       responseClose 
+       ( from . liftIO . responseBody)
 
             
