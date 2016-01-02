@@ -1,6 +1,12 @@
 {-| "Pipes.Group.Tutorial" is the correct introduction to the use of this module,
     which is mostly just an optimized @Pipes.Group@, replacing @FreeT@ with @Stream@. 
-    (See the introductory documentation for this package. The @pipes-group@ tutorial 
+    .
+    The only systematic difference is that this simple module omits lenses, which 
+    may make elementary usage easier to grasp. The lenses exported the pipes packages
+    come into their own with the simple @StateT@ parsing procedure pipes promotes.
+    I hope to make a corresponding @Streaming.Pipes.Lens@ soon.
+    .
+    The @pipes-group@ tutorial 
     is framed as a hunt for a genuinely streaming
     @threeGroups@. The formulation it opts for in the end would 
     be expressed here thus:
@@ -12,7 +18,6 @@
 > threeGroups :: (Monad m, Eq a) => Producer a m () -> Producer a m ()
 > threeGroups = concats . takes 3 . groups
 
-   The only difference is that this simple module omits the detour via lenses.
    The program splits the initial producer into a connected stream of
    producers containing  "equal" values; it takes three of those; and then
    erases the effects of splitting. So for example
@@ -25,11 +30,20 @@
 'c'
 
    For the rest, only part of the tutorial that would need revision is 
-   the bit at the end about writing explicit @FreeT@ programs. 
-   Its examples use pattern matching, but the constructors of the 
-   @Stream@ type are necessarily hidden, so one would have replaced 
-   by the various inspection combinators provided by the @streaming@ library.
-   
+   the bit at the end about writing explicit @FreeT@ programs. Here one does
+   not proceed by pattern matching, but uses `inspect` in place of `runFreeT`
+
+> inspect :: (Monad m, Functor f) => Stream f m r -> m (Either r (f (Stream f m r)))
+
+   and for construction of a @Stream (Producer a m) m r@, the usual battery of combinators: 
+
+> wrap   :: (Monad m, Functor f) => f (Stream f m r) -> Stream f m r
+> effect :: (Monad m, Functor f) => m (Stream f m r) -> Stream f m r
+> yields :: (Monad m, Functor f) => f r -> Stream f m r
+> lift   :: (Monad m, Functor f) => m r -> Stream f m r 
+
+   and so on. 
+
 -}
 
 {-#LANGUAGE RankNTypes, BangPatterns #-}
@@ -43,6 +57,22 @@ module Streaming.Pipes (
   toStreamingByteString,
   fromStreamingByteString,
   
+  -- * Splitting a 'Producer' into a connected stream of 'Producer's
+  chunksOf,
+  groups,
+  groupsBy,
+  groupsBy',
+  split,
+  breaks,
+  
+  -- * Rejoining a connected stream of 'Producer's
+  concats, 
+  intercalates,
+  
+  -- * Folding over the separate layers of a connected stream of 'Producer's
+  folds,
+  foldsM,
+  
   -- * Transforming a connected stream of 'Producer's
   takes,
   takes',
@@ -55,25 +85,11 @@ module Streaming.Pipes (
   group,
   groupBy,
   
-  -- * Splitting a 'Producer' into a connected stream of 'Producer's
-  groupsBy,
-  groupsBy',
-  groups,
-  split,
-  breaks,
-  
-  -- * Rejoining a connected stream of 'Producer's
-  concats, 
-  intercalates,
-  
-  -- * Folding over the separate layers of a connected stream of 'Producer's
-  folds,
-  foldsM,
-  
+
   ) where
 
 import Pipes
-import Streaming hiding (concats, groups)
+import Streaming hiding (concats, groups, chunksOf)
 import qualified Streaming.Internal as SI
 import qualified Pipes.Internal as PI
 import qualified Pipes.Prelude as P
@@ -88,7 +104,14 @@ import qualified Data.ByteString.Streaming as Q
 import qualified Data.ByteString.Streaming.Internal as Q
 
 
--- | Construct an ordinary pipes 'Producer' from a 'Stream' of elements
+{- | Construct an ordinary pipes 'Producer' from a 'Stream' of elements
+
+>>> runEffect $ fromStream (S.each  [1..3]) >-> P.print
+1
+2
+3
+
+-}
 fromStream :: Monad m => Stream (Of a) m r -> Producer' a m r
 fromStream = loop where
   loop stream = case stream of -- this should be rewritten without constructors
@@ -97,7 +120,14 @@ fromStream = loop where
     SI.Step (a:>rest) -> PI.Respond a  (\_ -> loop rest)
 {-# INLINABLE fromStream #-}
 
--- | Construct a 'Stream' of elements from a @pipes@ 'Producer'
+{- | Construct a 'Stream' of elements from a @pipes@ 'Producer'
+
+>>> S.print $ toStream $ P.each [1..3]
+1
+2
+3
+
+-}
 toStream :: Monad m => Producer a m r -> Stream (Of a) m r
 toStream = loop where
   loop stream = case stream of
@@ -107,7 +137,8 @@ toStream = loop where
     PI.Request x g -> PI.closed x
 {-# INLINABLE toStream #-}
 
-
+{-| Link the chunks of a producer of bytestrings into a single byte stream
+-}
 toStreamingByteString :: Monad m => Producer B.ByteString m r -> Q.ByteString m r
 toStreamingByteString = loop where
   loop stream = case stream of
@@ -118,6 +149,8 @@ toStreamingByteString = loop where
 {-# INLINABLE toStreamingByteString #-}
 
 
+{-| Successively yield the chunks hidden in a byte stream. 
+-}
 fromStreamingByteString :: Monad m => Q.ByteString m r -> Producer' B.ByteString m r
 fromStreamingByteString = loop where
   loop stream = case stream of -- this should be rewritten without constructors
@@ -144,6 +177,12 @@ span predicate = loop where
           else return (yield a >> p')
 {-# INLINABLE span #-}
 
+
+
+{-| 'break' splits a 'Producer' into two 'Producer's; the outer 'Producer' 
+    is the longest consecutive group of elements that fail the predicate.
+    Its inverse is 'Control.Monad.join'
+-}
 break :: Monad m => (a -> Bool) -> Producer a m r -> Producer a m (Producer a m r)
 break predicate = span (not . predicate)
 
@@ -210,7 +249,9 @@ group
 group = groupBy (==)
 {-# INLINABLE group #-}
 
-
+{-| 'groupsBy' splits a 'Producer' into a 'Stream' of 'Producer's of equal items.
+    Its inverse is 'concats'
+-}
 groupsBy
     :: Monad m
     => (a -> a -> Bool)
@@ -223,18 +264,18 @@ groupsBy equals = loop where
       Right (a, p') -> SI.Step (fmap loop (yield a >> span (equals a) p'))
 {-# INLINABLE groupsBy #-}
 
-{-| `groupsBy'` splits a 'Producer' into a 'Stream' of 'Producer's grouped using
-    the given equality predicate
+{-| @groupsBy'@ splits a 'Producer' into a 'Stream' of 'Producer's grouped using
+    the given relation. Its inverse is 'concats'
 
-    This differs from `groupsBy` by comparing successive elements for equality
+    This differs from 'groupsBy' by comparing successive elements
     instead of comparing each element to the first member of the group
 
 >>> import Pipes (yield, each)
 >>> import Pipes.Prelude (toList)
->>> let cmp c1 c2 = succ c1 == c2
->>> (toList . intercalates (yield '|') . groupsBy' cmp) (each "12233345")
+>>> let rel c1 c2 = succ c1 == c2
+>>> (toList . intercalates (yield '|') . groupsBy' rel) (each "12233345")
 "12|23|3|345"
->>> (toList . intercalates (yield '|') . groupsBy  cmp) (each "12233345")
+>>> (toList . intercalates (yield '|') . groupsBy  rel) (each "12233345")
 "122|3|3|34|5"
 -}
 groupsBy'
@@ -268,6 +309,34 @@ groupsBy' equals = loop where
 groups:: (Monad m, Eq a)
     =>  Producer a m r -> Stream (Producer a m) m r
 groups = groupsBy (==)
+
+
+{-| 'chunksOf' splits a 'Producer' into a 'Stream' of 'Producer's of a given length.
+    Its inverse is 'concats'.
+
+>>> let listN n = L.purely P.folds L.list . P.chunksOf n
+>>> runEffect $ listN 3 P.stdinLn >-> P.take 2 >-> P.map unwords >-> P.print
+1<Enter>
+2<Enter>
+3<Enter>
+"1 2 3"
+4<Enter>
+5<Enter>
+6<Enter>
+"4 5 6"
+>>> let stylish = P.concats . P.maps (<* P.yield "-*-") . P.chunksOf 2
+>>> runEffect $ stylish (P.each $ words "one two three four five six") >-> P.stdoutLn
+one
+two
+-*-
+three
+four
+-*-
+five
+six
+-*-
+
+-}
 
 chunksOf
     :: Monad m => Int -> Producer a m r -> Stream (Producer a m) m r
