@@ -11,20 +11,18 @@ description:         Experimental http-client, aeson, attoparsec and pipes utili
                      of a remote document thus:
                      .
                      > import Streaming
-                     > import Streaming.Prelude (with, each, next, for)
+                     > import Streaming.Prelude (with, each)
                      > import qualified Streaming.Prelude as S
                      > import Data.ByteString.Streaming.HTTP
                      > import qualified Data.ByteString.Streaming.Char8 as Q
                      > 
-                     > main = runResourceT  
-                     >        $ Q.putStrLn
-                     >        $ Q.unlines
-                     >        $ interleaves numbers
-                     >        & Q.lines
-                     >        $ simpleHTTP "http://lpaste.net/raw/146542"
+                     > main =  runResourceT $ do 
+                     >    let output = numbers <|> Q.lines (simpleHTTP "http://lpaste.net/raw/146542")
+                     >    Q.putStrLn $ Q.unlines output
                      > 
-                     > numbers :: Monad m => Stream (Q.ByteString m) m r
-                     > numbers = with (S.enumFrom (1::Int)) $ \n -> Q.pack (each (show n ++ ".  "))
+                     > numbers :: Monad m => Stream (Q.ByteString m) m () 
+                     > numbers = with (each [1..]) $ \n -> Q.pack (each (show n ++ ".  "))
+                     > -- ["1. ", "2. " ..]
                      .
                      The memory requirements of this @Prelude@-ish program will not be 
                      affected by the fact that, say, the third \'line\' is 10 terabytes long.
