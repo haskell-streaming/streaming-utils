@@ -2,15 +2,27 @@
 {-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE RankNTypes         #-}
 {- | The @encode@, @decode@ and @decoded@ functions replicate 
-     the similar functions in Renzo Carbonara's `pipes-aeson`.
-     Aeson must consume a whole top level json array or
-     object before coming to any conclusion.
-     The @streamParse@ function accepts parsers from the 'json-streams' library.
-     The 'json-streams' parsers use aeson types, but will stream suitable elements
-     as they arise.
+     the similar functions in Renzo Carbonara's 
+     <http://hackage.haskell.org/package/pipes-aeson pipes-aeson> .
+     Note that @aeson@ accumulates a whole top level json array or object before coming to any conclusion.
+     This is the only default that could cover all cases. 
 
-     Here we grab the "names" field from the arrayed elements of the \"friends\" field 
-     of a long from an array of json objects in the @json-streams@ benchmarking directory:
+     The @streamParse@ function accepts parsers from the 
+     <http://hackage.haskell.org/package/json-stream json-streams> library.
+     The 'json-streams' parsers use aeson types, but will stream suitable elements
+     as they arise.  For this reason, of course, it cannot validate the entire json 
+     entity before acting, but carries on validation as it moves along, reporting 
+     failure when it comes. Though it is generally faster and accumulates less memory than
+     the usual aeson parsers, it is by no means a universal replacement for 
+     aeson\'s behavior.  It will certainly be sensible, for example, wherever 
+     you are executing a left fold over the subordinate elements, e.g. gathering certain
+     statistics about them. 
+
+     Here we use a long top level array of objects from 
+     <https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json a file> 
+     @json-streams@ benchmarking directory. Each object has a friends field with 
+     an array of friends; we extract the name of each friend of each person recorded in the level array, and
+     enumerate them all:
 
 > {-#LANGUAGE OverloadedStrings #-}
 > import Streaming
@@ -32,6 +44,7 @@
 >       & void                                     -- drop material after any bad parse
 >       & S.zip (S.each [1..])                     -- number the friends' names
 >       & S.print                                  -- successively print to stdout
+>
 > -- (1,"Joyce Jordan")
 > -- (2,"Ophelia Rosales")
 > -- (3,"Florine Stark")
@@ -39,12 +52,9 @@
 > -- (287,"Hilda Craig")
 > -- (288,"Leola Higgins")
 
-
    This program does not accumulate the whole byte stream, as an aeson parser 
    for a top-level json entity would. Rather it streams friends\' names as soon as they come.  
-   For this reason, of course, it cannot validate the entire json entity before 
-   acting, but carries on validation as it moves along, reporting failure when it comes. 
-   It is thus by no means a universal replacement for aeson\'s behavior.
+
 -}
 
 
