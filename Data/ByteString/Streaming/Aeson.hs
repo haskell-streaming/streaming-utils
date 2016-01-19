@@ -53,7 +53,8 @@
 > -- (288,"Leola Higgins")
 
    This program does not accumulate the whole byte stream, as an aeson parser 
-   for a top-level json entity would. Rather it streams friends\' names as soon as they come.  
+   for a top-level json entity would. Rather it streams and enumerates 
+   friends\' names as soon as they come.  
 
 -}
 
