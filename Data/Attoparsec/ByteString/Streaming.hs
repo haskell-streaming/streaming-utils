@@ -1,9 +1,50 @@
+{- | Here is a simple use of 'parsed' and standard @Streaming@ segmentation devices to 
+     parse a file in which groups of numbers are separated by blank lines. Such a problem
+     of \'nesting streams\' is described in the @conduit@ context in 
+     <http://stackoverflow.com/questions/32957258/how-to-model-nested-streams-with-conduits/32961296 this StackOverflow question> 
+
+> -- $ cat nums.txt
+> -- 1
+> -- 2
+> -- 3
+> --
+> -- 4
+> -- 5
+> -- 6
+> --
+> -- 7
+> -- 8
+
+   We will sum the groups and stream the results to standard output:
+
+> import Streaming
+> import qualified Streaming.Prelude as S
+> import qualified Data.ByteString.Streaming.Char8 as Q
+> import qualified Data.Attoparsec.ByteString.Char8 as A
+> import qualified Data.Attoparsec.ByteString.Streaming as A
+> import Data.Function ((&))
+>
+> main = Q.getContents           -- raw bytes
+>        & A.parsed lineParser   -- stream of parsed `Maybe Int`s; blank lines are `Nothing`
+>        & void                  -- drop any unparsed nonsense at the end
+>        & S.split Nothing       -- split on blank lines
+>        & S.maps S.concat       -- keep `Just x` values in the sub-streams (cp. catMaybes)
+>        & S.mapped S.sum        -- sum each substream
+>        & S.print               -- stream results to stdout
+>
+> lineParser = Just <$> A.scientific <* A.endOfLine <|> Nothing <$ A.endOfLine
+
+> -- $ cat nums.txt | ./atto
+> -- 6.0
+> -- 15.0
+> -- 15.0
+
+-} 
 module Data.Attoparsec.ByteString.Streaming
     (Message
     , parse
     , parsed
     , module Data.Attoparsec.ByteString
-    
     )
     where
 
@@ -24,13 +65,14 @@ type Message = ([String], String)
 
 {- | The result of a parse (@Either a ([String], String)@), with the unconsumed byte stream.
 
->>> (r,rest1) <- parse (A.scientific <* A.many' A.space) $ "12.3  4.56  78." >> "3"
+>>> :set -XOverloadedStrings  -- the string literal below is a streaming bytestring
+>>> (r,rest1) <- AS.parse (A.scientific <* A.many' A.space) "12.3  4.56  78.3" 
 >>> print r
 Left 12.3
->>> (s,rest2) <- parse (A.scientific <* A.many' A.space) rest1
+>>> (s,rest2) <- AS.parse (A.scientific <* A.many' A.space) rest1
 >>> print s
 Left 4.56
->>> (t,rest3) <- parse (A.scientific <* A.many' A.space) rest2
+>>> (t,rest3) <- AS.parse (A.scientific <* A.many' A.space) rest2
 >>> print t
 Left 78.3
 >>> Q.putStrLn rest3
@@ -51,10 +93,10 @@ parse p s  = case s of
   go (T.Partial k) blank        = go (k B.empty) blank
 
 
-{-| Parse a succession of values from a stream of bytes, ending when the parser fails.or
-    the bytes run out.
+{-| Apply a parser repeatedly to a stream of bytes, streaming the parsed values, but 
+    ending when the parser fails.or the bytes run out.
 
->>> S.print $  AS.parsed (A.scientific <* A.many' A.space) $ "12.3  4.56  78." >> "9   18.282"
+>>> S.print $ AS.parsed (A.scientific <* A.many' A.space) $ "12.3  4.56  78.9"
 12.3
 4.56
 78.9
