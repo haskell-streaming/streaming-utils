@@ -12,7 +12,6 @@
      Here we grab the "names" field from the arrayed elements of the \"friends\" field 
      of a long from an array of json objects in the @json-streams@ benchmarking directory:
 
-
 > {-#LANGUAGE OverloadedStrings #-}
 > import Streaming
 > import qualified Streaming.Prelude as S
@@ -40,6 +39,12 @@
 > -- (287,"Hilda Craig")
 > -- (288,"Leola Higgins")
 
+
+   This program does not accumulate the whole byte stream, as an aeson parser 
+   for a top-level json entity would. Rather it streams friends\' names as soon as they come.  
+   For this reason, of course, it cannot validate the entire json entity before 
+   acting, but carries on validation as it moves along, reporting failure when it comes. 
+   It is thus by no means a universal replacement for aeson\'s behavior.
 -}
 
 
