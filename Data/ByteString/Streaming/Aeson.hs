@@ -1,13 +1,47 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE RankNTypes         #-}
--- | The @encode@, @decode@ and @decoded@ functions replicate 
---   the similar functions in Renzo Carbonara's `pipes-aeson`.
---   @streamParse@ accepts parsers from the 'json-streams' library.
---   Aeson must consume a whole top level json array or
---   object before coming to any conclusion. The 'json-streams'
---   parsers use aeson types, but will stream suitable elements
---   as they arise. 
+{- | The @encode@, @decode@ and @decoded@ functions replicate 
+     the similar functions in Renzo Carbonara's `pipes-aeson`.
+     Aeson must consume a whole top level json array or
+     object before coming to any conclusion.
+     The @streamParse@ function accepts parsers from the 'json-streams' library.
+     The 'json-streams' parsers use aeson types, but will stream suitable elements
+     as they arise.
+
+     Here we grab the "names" field from the arrayed elements of the \"friends\" field 
+     of a long from an array of json objects in the @json-streams@ benchmarking directory:
+
+
+> {-#LANGUAGE OverloadedStrings #-}
+> import Streaming
+> import qualified Streaming.Prelude as S
+> import Data.ByteString.Streaming.HTTP 
+> import Data.ByteString.Streaming.Aeson (streamParse)
+> import Data.JsonStream.Parser (string, arrayOf, (.:), Parser)
+> import Data.Text (Text)
+> import Data.Function ((&))
+> main = do
+>    req <- parseUrl "https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json"
+>    m <- newManager tlsManagerSettings
+>    withHTTP req m $ \resp -> do 
+>      let names, friend_names :: Parser Text
+>          names = arrayOf ("name" .: string)
+>          friend_names = arrayOf ("friends" .: names)
+>      responseBody resp                           -- raw bytestream from http-client
+>       & streamParse friend_names                 -- find name fields in each sub-array of friends
+>       & void                                     -- drop material after any bad parse
+>       & S.zip (S.each [1..])                     -- number the friends' names
+>       & S.print                                  -- successively print to stdout
+> -- (1,"Joyce Jordan")
+> -- (2,"Ophelia Rosales")
+> -- (3,"Florine Stark")
+> -- ...
+> -- (287,"Hilda Craig")
+> -- (288,"Leola Higgins")
+
+-}
+
 
 module Data.ByteString.Streaming.Aeson
   ( DecodingError(..)

@@ -4,30 +4,30 @@
 --   Here is an example GET request that streams the response body to standard
 --   output:
 --
--- > import qualified Data.ByteString.Streaming as S
+-- > import qualified Data.ByteString.Streaming as Q
 -- > import Data.ByteString.Streaming.HTTP
 -- >
 -- > main = do
 -- >   req <- parseUrl "https://www.example.com"
 -- >   m <- newManager tlsManagerSettings 
--- >   withHTTP req m $ \resp -> S.stdout (responseBody resp) 
+-- >   withHTTP req m $ \resp -> Q.stdout (responseBody resp) 
 -- > 
 --
 --   Here is an example POST request that also streams the request body from
 --   standard input:
 --
 -- > {-#LANGUAGE OverloadedStrings #-}
--- > import qualified Data.ByteString.Streaming as S
+-- > import qualified Data.ByteString.Streaming as Q
 -- > import Data.ByteString.Streaming.HTTP
 -- > 
 -- > main = do
 -- >    req <- parseUrl "https://www.example.com"
 -- >    let req' = req
 -- >            { method = "POST"
--- >            , requestBody = stream S.stdin
+-- >            , requestBody = stream Q.stdin
 -- >            }
 -- >    m <- newManager tlsManagerSettings
--- >    withHTTP req' m $ \resp -> S.stdout (responseBody resp)
+-- >    withHTTP req' m $ \resp -> Q.stdout (responseBody resp)
 --
 -- For non-streaming request bodies, study the 'RequestBody' type, which also
 -- accepts strict \/ lazy bytestrings or builders.
