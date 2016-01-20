@@ -1,6 +1,6 @@
 # streaming-utils
 
-*Experimental http, attoparsec and pipes material for `streaming` and `streaming-bytestring`*
+*Experimental http, json, attoparsec and pipes material for `streaming` and `streaming-bytestring`*
 
 `Streaming.Pipes` reimplements some of the standard pipes splitting and joining operations with `Stream` in place of `FreeT`. The operations are all plain functions, not lenses, so they will be simpler to use, unless of course you are using pipes' `StateT` parsing. Another module is planned to recover this.
 
