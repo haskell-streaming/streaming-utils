@@ -2,7 +2,7 @@
 
 *Experimental http, json, attoparsec and pipes material for `streaming` and `streaming-bytestring`*
 
-`Streaming.Pipes` reimplements some of the standard pipes splitting and joining operations with `Stream` in place of `FreeT`. The operations are all plain functions, not lenses, so they will be simpler to use, unless of course you are using pipes' `StateT` parsing. Another module is planned to recover this.
+`Streaming.Pipes` reimplements some of the standard pipes splitting and joining operations with `Stream` in place of `FreeT`. The operations are all plain functions, not lenses. They will thus be simpler to use, unless of course you are using pipes' `StateT` parsing. Another module is planned to recover this style of parsing.
 
 `Data.ByteString.Streaming.HTTP` just replicates [`Pipes.HTTP`](https://hackage.haskell.org/package/pipes-http-1.0.2/docs/Pipes-HTTP.html) (barely a character is changed) so that the response takes the form of a `ByteString m ()` rather than `Producer ByteString m ()`.  This is the intuitively correct response type. Where `Producer ByteString m ()`, `Conduit.Source m ByteString`, `IOStreams.InputStream ByteString`, etc. are used as the response type, the defective model of the `enumerator` (and here `http-enumerator`) library is followed: the underlying bytestring chunks are treated as semantically significant Haskell values. But they are not semantically significant Haskell values. This mistake is not made where e.g. lazy bytestring is used for responses, and should not be made by streaming libraries.
 
