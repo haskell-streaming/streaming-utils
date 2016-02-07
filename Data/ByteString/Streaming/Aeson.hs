@@ -20,8 +20,9 @@
 
      Here we use a long top level array of objects from 
      <https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json a file> 
-     @json-streams@ benchmarking directory. Each object has a friends field with 
-     an array of friends; we extract the name of each friend of each person recorded in the level array, and
+     @json-streams@ benchmarking directory. Each object in the top level array 
+     has a \"friends\" field with an assocated array of friends; each of these has a \"name\".
+     Here, we extract the name of each friend of each person recorded in the level array, and
      enumerate them all:
 
 > {-#LANGUAGE OverloadedStrings #-}
@@ -54,7 +55,8 @@
 
    This program does not accumulate the whole byte stream, as an aeson parser 
    for a top-level json entity would. Rather it streams and enumerates 
-   friends\' names as soon as they come.  
+   friends\' names as soon as they come. With appropriate instances, we could
+   of course just stream the objects in the top-level array instead. 
 
 -}
 

@@ -53,10 +53,13 @@ source-repository head
     location: https://github.com/michaelt/streaming-utils
 
 library
-  exposed-modules:     Data.Attoparsec.ByteString.Streaming,
-                       Data.ByteString.Streaming.HTTP,
-                       Data.ByteString.Streaming.Aeson,
-                       Streaming.Pipes
+  exposed-modules:     Data.Attoparsec.ByteString.Streaming
+                       , Data.ByteString.Streaming.HTTP
+                       , Data.ByteString.Streaming.Aeson
+                       , Streaming.Pipes
+                       , Streaming.Network.TCP
+  --                     , Streaming.Pipes.Concurrent
+
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
   
@@ -68,6 +71,9 @@ library
                        streaming-bytestring >=  0.1.4.0 && < 0.1.4.5,
                        bytestring > 0.10.0 && < 0.11.0,
                        pipes >= 4.0 && < 4.2,
+                       network-simple,
+                       network, 
+                 --      pipes-concurrency >= 2.0 && < 2.1, 
                        http-client >=0.2 && <0.5, 
                        http-client-tls <0.3,
                        aeson > 0.8 && <0.9.1.0,
