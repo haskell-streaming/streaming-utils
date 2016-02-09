@@ -5,14 +5,6 @@
 --   the "Network.Simple.TCP" module from Carbonara\'s @network-simple@ package, which is
 --   completely re-exported from this module. 
 
--- | The material gives us occasion to meditate once again on the fact
---   that if the @bytestring@ package had exported a correct streaming module, 
---   which /it could have done with a minute but systematic typographical 
---   alteration of @Data.ByteString.Lazy@/
---   , then the entire Haskell infrastructure, including libraries like 
---   @network-simple@, would have exported combinators like these from the beginning, 
---   as a matter of course, almost without additional thought.
-
 
 module Streaming.Network.TCP (
   -- * Receiving
