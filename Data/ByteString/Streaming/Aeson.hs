@@ -186,11 +186,19 @@ decoded = consecutively decode
                            
      If the parser is fitted to recognize only one thing, 
      then zero or one item will be yielded; if it uses combinators like @arrayOf@, 
-     it will stream many values as they arise. 
+     it will stream many values as they arise. See the example at the top of this module,
+     in which values inside a top level array are emitted as they are parsed. Aeson would
+     accumulate the whole bytestring before declaring on the contents of the array.
+     This of course makes sense, since attempt to parse a json array may end with 
+     a bad parse, invalidating the json as a whole.  With @json-streams@, a bad 
+     parse will also of course emerge in the end, but only after the initial good parses
+     are streamed. This too makes sense though, but in a smaller range of contexts 
+     -- for example, where one is folding over the parsed material.
+      
                            
      This function is closely modelled on 
      'Data.JsonStream.Parser.parseByteString' and 
-     'Data.JsonStream.Parser.parseLazyByteString'
+     'Data.JsonStream.Parser.parseLazyByteString' from @Data.JsonStream.Parser@.
                            
       -}
 streamParse
