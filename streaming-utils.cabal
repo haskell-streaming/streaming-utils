@@ -64,7 +64,7 @@ library
   other-extensions:    CPP, Trustworthy
   
   build-depends:       base >=4.7 && <5.0, 
-                       transformers >=0.4 && <0.5.2, 
+                       transformers >=0.4 && <0.5.3, 
                        mtl >=2.2 && <2.3,
                        attoparsec >=0.13.0.1,
                        streaming >=  0.1.4.0 && < 0.1.4.5,
@@ -76,7 +76,7 @@ library
                  --      pipes-concurrency >= 2.0 && < 2.1, 
                        http-client >=0.2 && <0.5, 
                        http-client-tls <0.3,
-                       aeson > 0.8 && <0.9.1.0,
+                       aeson > 0.8 && <0.11.3,
                        json-stream > 0.4.0 && < 0.4.2,
                        resourcet > 1.0 && < 1.2
                       
