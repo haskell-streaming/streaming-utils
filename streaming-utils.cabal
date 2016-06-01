@@ -1,5 +1,5 @@
 name:                streaming-utils
-version:             0.1.4.2
+version:             0.1.4.3
 synopsis:            http, attoparsec, pipes and conduit utilities for the streaming libraries
 description:         Experimental http-client, aeson, attoparsec and pipes utilities for use with
                      the <http://hackage.haskell.org/package/streaming streaming> and 
