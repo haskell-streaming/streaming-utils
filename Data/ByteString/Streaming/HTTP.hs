@@ -1,8 +1,10 @@
 {-#LANGUAGE OverloadedStrings #-}
--- | This module replicates `pipes-http` as closely as will type-check.
--- 
---   Here is an example GET request that streams the response body to standard
---   output:
+-- | This module replicates `pipes-http` as closely as will type-check, adding a
+--   conduit-like @http@ in @ResourceT@ and a primitive @simpleHTTP@ that emits
+--   a streaming bytestring rather than a lazy one. 
+--
+--  
+--   Here is an example GET request that streams the response body to standard output:
 --
 -- > import qualified Data.ByteString.Streaming as Q
 -- > import Data.ByteString.Streaming.HTTP
@@ -29,18 +31,36 @@
 -- >    m <- newManager tlsManagerSettings
 -- >    withHTTP req' m $ \resp -> Q.stdout (responseBody resp)
 --
+-- Here is the GET request modified to use @http@ and write to a file. @runResourceT@
+-- manages the file handle and the interaction.
+--
+-- > import qualified Data.ByteString.Streaming as Q
+-- > import Data.ByteString.Streaming.HTTP
+-- >
+-- > main = do
+-- >   req <- parseUrl "https://www.example.com"
+-- >   m <- newManager tlsManagerSettings 
+-- >   runResourceT $ do
+-- >      resp <- http request manager 
+-- >      Q.writeFile "example.html" (responseBody resp) 
+--
+-- 
+--   @simpleHTTP@ can be used in @ghci@ like so:
+--
+--  > ghci> runResourceT $ Q.stdout $ Q.take 137 $ simpleHTTP "http://lpaste.net/raw/13"
+--  > -- Adaptation and extension of a parser for data definitions given in
+--  > -- appendix of G. Huttons's paper - Monadic Parser Combinators.
+--  > --
+
 -- For non-streaming request bodies, study the 'RequestBody' type, which also
 -- accepts strict \/ lazy bytestrings or builders.
 
 
 module Data.ByteString.Streaming.HTTP (
-    -- * http-client
-    -- $httpclient
-      module Network.HTTP.Client
-    , module Network.HTTP.Client.TLS
 
     -- * Streaming Interface
-    , withHTTP
+    withHTTP
+    , http
     , streamN
     , stream
     
@@ -48,6 +68,8 @@ module Data.ByteString.Streaming.HTTP (
     , simpleHTTP
 
     -- * re-exports
+    , module Network.HTTP.Client
+    , module Network.HTTP.Client.TLS
     , ResourceT (..)
     , MonadResource (..)
     , runResourceT
@@ -63,7 +85,7 @@ import Data.ByteString.Streaming
 import Data.ByteString.Streaming.Internal
 import Control.Monad.Trans
 import Control.Monad.Trans.Resource
-
+import qualified Data.ByteString.Streaming.Char8 as Q
 {- $httpclient
     This module is a thin @streaming-bytestring@ wrapper around the @http-client@ and
     @http-client-tls@ libraries.
@@ -189,4 +211,13 @@ simpleHTTP url = do
        responseClose 
        ( from . liftIO . responseBody)
 
+
+http :: MonadResource m
+      => Request
+      -> Manager
+      -> m (Response (ByteString m ()))
+http req man = do
+     (key, res) <- allocate (responseOpen req man) responseClose
+     return res {responseBody = from (liftIO (responseBody res))}
             
+
