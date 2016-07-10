@@ -44,7 +44,7 @@ module Data.Attoparsec.ByteString.Streaming
     (Message
     , parse
     , parsed
-    , module Data.Attoparsec.ByteString
+--    , module Data.Attoparsec.ByteString
     )
     where
 
