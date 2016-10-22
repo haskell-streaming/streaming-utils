@@ -1,3 +1,5 @@
+-- | This module modifies material in Renzo Carbonara' 'pipes-zlib' package.  
+
 module Streaming.Zip (
     -- * Streams
       decompress
@@ -34,15 +36,15 @@ import Data.ByteString.Streaming.Internal (ByteString (..))
 
 --------------------------------------------------------------------------------
 
--- | Decompress bytes flowing from a 'Producer'.
+-- | Decompress bytes flowing from a streaming 'ByteString'.
 --
 -- See the "Codec.Compression.Zlib" module for details about 'Z.WindowBits'.
 --
 -- 
 -- 'decompress' :: 'MonadIO' m
 --            => 'Z.WindowBits'
---            => 'Producer' 'B.ByteString' m r
---            -> 'Producer' 'B.ByteString' m r
+--            => 'ByteString' m r
+--            -> 'ByteString' m r
 -- @
 decompress
   :: MonadIO m
@@ -59,7 +61,7 @@ decompress wbits p0 = do
     return r
 {-# INLINABLE decompress #-}
 
--- | Decompress bytes flowing from a 'Producer', returning any leftover input
+-- | Decompress bytes flowing from a 'ByteString', returning any leftover input
 -- that follows the compressed stream.
 decompress'
   :: MonadIO m
@@ -85,7 +87,7 @@ decompress' wbits p0 = go p0 =<< liftIO (Z.initInflate wbits)
                else return $ Left (chunk leftover >> p')
 {-# INLINABLE decompress' #-}
 
--- | Compress bytes flowing from a 'Producer'.
+-- | Compress bytes flowing from a 'ByteString'.
 --
 -- See the "Codec.Compression.Zlib" module for details about
 -- 'Z.CompressionLevel' and 'Z.WindowBits'.
@@ -94,8 +96,8 @@ decompress' wbits p0 = go p0 =<< liftIO (Z.initInflate wbits)
 -- 'compress' :: 'MonadIO' m
 --          => 'Z.CompressionLevel'
 --          -> 'Z.WindowBits'
---          -> 'Producer' 'B.ByteString' m r
---          -> 'Producer' 'B.ByteString' m r
+--          -> 'ByteString' m r
+--          -> 'ByteString' m r
 -- @
 compress
   :: MonadIO m
@@ -175,8 +177,8 @@ fromPopper pop = loop
 --
 -- @
 -- 'decompress' :: 'MonadIO' m
---            => 'Producer' 'B.ByteString' m r
---            -> 'Producer' 'B.ByteString' m r
+--            => 'ByteString' m r
+--            -> 'ByteString' m r
 -- @
 gunzip
   :: MonadIO m
@@ -185,25 +187,25 @@ gunzip
 gunzip = decompress gzWindowBits
 {-# INLINABLE gunzip #-}
 
--- | Decompress bytes flowing from a 'Producer', returning any leftover input
+-- | Decompress bytes flowing from a 'ByteString', returning any leftover input
 -- that follows the compressed stream.
 gunzip'
   :: MonadIO m
   => ByteString m r -- ^ Compressed stream
   -> ByteString m (Either (ByteString m r) r)
-     -- ^ Decompressed stream, returning either a 'Producer' of the leftover input
-     -- or the return value from the input 'Producer'.
+     -- ^ Decompressed stream, returning either a 'ByteString' of 
+      -- the leftover input or the return value from the input 'ByteString'.
 gunzip' = decompress' gzWindowBits
 {-# INLINE gunzip' #-}
 
 
--- | Compress bytes flowing from a 'Producer'.
+-- | Compress bytes flowing from a 'ByteString' in the gzip format.
 --
 -- @
 -- 'gzip' :: 'MonadIO' m
 --          => 'ZC.CompressionLevel'
---          -> 'Producer' 'B.ByteString' m r
---          -> 'Producer' 'B.ByteString' m r
+--          -> 'ByteString' m r
+--          -> 'ByteString' m r
 -- @
 gzip
   :: MonadIO m
@@ -215,26 +217,3 @@ gzip clevel = compress clevel gzWindowBits
 
 gzWindowBits :: Z.WindowBits
 gzWindowBits = Z.WindowBits 31
-
--- data CompressStream m =
---      CompressInputRequired {
---          compressSupplyInput :: S.ByteString -> m (CompressStream m)
---        }
---
---    | CompressOutputAvailable {
---         compressOutput :: !S.ByteString,
---         compressNext   :: m (CompressStream m)
---       }
---
---    | CompressStreamEnd
--- cc p cs = PI.M $ Zlib.foldCompressStream (\op -> return (PI.Request () (PI.M . op)))
---           (\bs p -> return (P.yield bs >> PI.M p)) (return p) cs
---
---
--- dd format params p =
---   PI.M $ Zlib.foldCompressStream (\op -> return (PI.Request () (PI.M . op)))
---           (\bs p -> return (P.yield bs >> PI.M p)) (return p)
---           (Zlib.compressIO format params)
---
--- gzip'  = dd  Zlib.gzipFormat Zlib.defaultCompressParams P.cat
-          
