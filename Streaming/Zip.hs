@@ -1,4 +1,4 @@
--- | This module modifies material in Renzo Carbonara' 'pipes-zlib' package.  
+-- | This module modifies material in Renzo Carbonara\'s <http://hackage.haskell.org/package/pipes-zlib pipes-zlib> package.   
 
 module Streaming.Zip (
     -- * Streams
@@ -36,11 +36,11 @@ import Data.ByteString.Streaming.Internal (ByteString (..))
 
 --------------------------------------------------------------------------------
 
--- | Decompress bytes flowing from a streaming 'ByteString'.
+-- | Decompress a deflate-compressed byte stream.
 --
 -- See the "Codec.Compression.Zlib" module for details about 'Z.WindowBits'.
 --
--- 
+-- @
 -- 'decompress' :: 'MonadIO' m
 --            => 'Z.WindowBits'
 --            => 'ByteString' m r
@@ -61,14 +61,14 @@ decompress wbits p0 = do
     return r
 {-# INLINABLE decompress #-}
 
--- | Decompress bytes flowing from a 'ByteString', returning any leftover input
--- that follows the compressed stream.
+-- | Decompress a zipped byte stream, returning any leftover input
+-- that follows the compressed material.
 decompress'
   :: MonadIO m
   => Z.WindowBits
-  -> ByteString m r -- ^ Compressed stream
+  -> ByteString m r -- ^ Compressed byte stream
   -> ByteString m (Either (ByteString m r) r)
-     -- ^ Decompressed stream, ending with either leftovers or a result
+     -- ^ Decompressed byte stream, ending with either leftovers or a result
 decompress' wbits p0 = go p0 =<< liftIO (Z.initInflate wbits)
   where
     flush inf = do
@@ -87,7 +87,7 @@ decompress' wbits p0 = go p0 =<< liftIO (Z.initInflate wbits)
                else return $ Left (chunk leftover >> p')
 {-# INLINABLE decompress' #-}
 
--- | Compress bytes flowing from a 'ByteString'.
+-- | Compress a byte stream.
 --
 -- See the "Codec.Compression.Zlib" module for details about
 -- 'Z.CompressionLevel' and 'Z.WindowBits'.
@@ -112,7 +112,7 @@ compress (CompressionLevel clevel) wbits p0 = do
             popper <- liftIO (Z.feedDeflate def c)
             fromPopper popper
             loop rest
-          I.Go m -> I.Go (fmap loop m)
+          I.Go m -> I.Go (liftM loop m)
           I.Empty r -> return r
     r <- loop p0
     fromPopper $ Z.finishDeflate def
@@ -148,35 +148,10 @@ compressionLevel n
 windowBits :: Int -> WindowBits
 windowBits = WindowBits
 
---------------------------------------------------------------------------------
--- Internal stuff
-
-
-for bs0 op = loop bs0 where
-  loop bs = case bs of 
-    I.Chunk c rest -> op c >> loop rest
-    I.Go m -> I.Go (fmap loop m)
-    I.Empty r -> return r
-{-# INLINABLE for #-}
-
--- | Produce values from the given 'Z.Popper' until exhausted.
-fromPopper :: MonadIO m
-           => Z.Popper
-           -> ByteString m ()
-fromPopper pop = loop
-  where
-    loop = do 
-      mbs <- liftIO pop
-      case mbs of
-          PRDone     -> I.Empty ()
-          PRError e  -> I.Go (liftIO (throwIO e))
-          PRNext bs  -> I.Chunk bs loop
-{-# INLINABLE fromPopper #-}
-
--- | Decompress bytes flowing from a 'Producer'.
+-- | Decompress a gzipped byte stream.
 --
 -- @
--- 'decompress' :: 'MonadIO' m
+-- 'gunzip' :: 'MonadIO' m
 --            => 'ByteString' m r
 --            -> 'ByteString' m r
 -- @
@@ -187,19 +162,19 @@ gunzip
 gunzip = decompress gzWindowBits
 {-# INLINABLE gunzip #-}
 
--- | Decompress bytes flowing from a 'ByteString', returning any leftover input
+-- | Decompress a gzipped byte stream, returning any leftover input
 -- that follows the compressed stream.
 gunzip'
   :: MonadIO m
-  => ByteString m r -- ^ Compressed stream
+  => ByteString m r -- ^ Compressed byte stream
   -> ByteString m (Either (ByteString m r) r)
-     -- ^ Decompressed stream, returning either a 'ByteString' of 
+     -- ^ Decompressed bytes stream, returning either a 'ByteString' of 
       -- the leftover input or the return value from the input 'ByteString'.
 gunzip' = decompress' gzWindowBits
 {-# INLINE gunzip' #-}
 
 
--- | Compress bytes flowing from a 'ByteString' in the gzip format.
+-- | Compress a byte stream in the gzip format.
 --
 -- @
 -- 'gzip' :: 'MonadIO' m
@@ -217,3 +192,30 @@ gzip clevel = compress clevel gzWindowBits
 
 gzWindowBits :: Z.WindowBits
 gzWindowBits = Z.WindowBits 31
+
+
+--------------------------------------------------------------------------------
+-- Internal stuff
+
+
+for bs0 op = loop bs0 where
+  loop bs = case bs of 
+    I.Chunk c rest -> op c >> loop rest
+    I.Go m -> I.Go (liftM loop m)
+    I.Empty r -> return r
+{-# INLINABLE for #-}
+
+-- | Produce values from the given 'Z.Popper' until exhausted.
+fromPopper :: MonadIO m
+           => Z.Popper
+           -> ByteString m ()
+fromPopper pop = loop
+  where
+    loop = do 
+      mbs <- liftIO pop
+      case mbs of
+          PRDone     -> I.Empty ()
+          PRError e  -> I.Go (liftIO (throwIO e))
+          PRNext bs  -> I.Chunk bs loop
+{-# INLINABLE fromPopper #-}
+
