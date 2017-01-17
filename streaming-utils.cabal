@@ -1,10 +1,11 @@
 name:                streaming-utils
 version:             0.1.4.4
-synopsis:            http, attoparsec, utilities for the streaming libraries
-description:         Experimental http-client, aeson, attoparsec and pipes utilities for use with
+synopsis:            http, attoparsec, pipes and other utilities for the streaming libraries
+
+description:         This package includes http-client, aeson, attoparsec, zlib and pipes utilities for use with
                      the <http://hackage.haskell.org/package/streaming streaming> and 
                      <http://hackage.haskell.org/package/streaming-bytestring streaming bytestring> libraries. 
-                     They generally closely follow similarly named modules in the pipes 
+                     The modules generally closely follow similarly named modules in the pipes 
                      \'ecosystem\', using similar function names, where possible. 
                      .
                      Thus, for example, using the http client module, we might number the lines
