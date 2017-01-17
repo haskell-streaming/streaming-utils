@@ -132,7 +132,7 @@ parsed parser = begin
             Chunk bs p1 | B.null bs -> begin p1
                         | otherwise -> step (chunk bs >>) (A.parse parser bs) p1
     step diffP res p0 = case res of
-      A.Fail _ c m -> Return (Left ((m,c), diffP p0))
+      A.Fail _ c m -> Return (Left ((c,m), diffP p0))
       A.Done bs a  | B.null bs -> Step (a :> begin p0) 
                    | otherwise -> Step (a :> begin (chunk bs >> p0))
       A.Partial k  -> do
