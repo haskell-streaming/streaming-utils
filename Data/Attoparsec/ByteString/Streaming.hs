@@ -56,7 +56,7 @@ import Data.Attoparsec.ByteString
             parse, parseWith, parseTest)
 
 import Streaming hiding (concats, unfold)
-import Streaming.Internal (Stream (..))
+import Streaming.Internal (Stream (..)) 
 import Data.ByteString.Streaming
 import Data.ByteString.Streaming.Internal
 import Data.Monoid 
@@ -81,17 +81,34 @@ Left 78.3
 parse :: Monad m 
       => A.Parser a 
       -> ByteString m x -> m (Either a Message, ByteString m x)
-parse p s  = case s of
-    Chunk x xs -> go (A.parse p x) xs
-    Empty r    -> go (A.parse p B.empty) (Empty r)
-    Go m       -> m >>= parse p
-  where
-  go (T.Fail x stk msg) ys      = return $ (Right (stk, msg), Chunk x ys)
-  go (T.Done x r) ys            = return $ (Left r, Chunk x ys)
-  go (T.Partial k) (Chunk y ys) = go (k y) ys
-  go (T.Partial k) (Go m)       = m >>= go (T.Partial k)
-  go (T.Partial k) blank        = go (k B.empty) blank
+parse parser bs = do 
+  (e,rest) <- apply parser bs
+  return (either Right Left e, rest)
+{-#INLINE parse #-}
 
+apply :: Monad m
+        => A.Parser a
+        -> ByteString m x -> m (Either Message a, ByteString m x)
+apply parser = begin where
+  
+    begin p0 = case p0 of
+      Go m        -> m >>= begin
+      Empty r     -> step id (A.parse parser mempty) (return r)
+      Chunk bs p1 -> if B.null bs -- attoparsec understands "" 
+        then begin p1             -- as eof.
+        else step (chunk bs >>) (A.parse parser bs) p1
+
+    step diff res p0 = case res of
+      T.Fail _ c m -> return (Left (c,m), diff p0)
+      T.Done a b   -> return (Right b, chunk a >> p0)
+      T.Partial k  -> do
+        let clean p = case p of  -- inspect for null chunks before
+              Go m        -> m >>= clean  -- feeding attoparsec 
+              Empty r     -> step diff (k mempty) (return r)
+              Chunk bs p1 | B.null bs -> clean p1
+                          | otherwise -> step (diff . (chunk bs >>)) (k bs) p1
+        clean p0
+{-#INLINABLE apply #-} 
 
 {-| Apply a parser repeatedly to a stream of bytes, streaming the parsed values, but 
     ending when the parser fails.or the bytes run out.
@@ -101,46 +118,27 @@ parse p s  = case s of
 4.56
 78.9
 18.282
-
 -}
 parsed
   :: Monad m
   => A.Parser a     -- ^ Attoparsec parser
   -> ByteString m r -- ^ Raw input
   -> Stream (Of a) m (Either (Message, ByteString m r) r)
-parsed parser = go
+parsed parser = begin
   where
-    go p0 = do
-      x <- lift (nextChunk p0)
-      case x of
-        Left r       -> Return (Right r)
-        Right (bs,p1) -> step (chunk bs >>) (A.parse parser bs) p1
+    begin p0 = case p0 of  -- inspect for null chunks before
+            Go m        -> lift m >>= begin -- feeding attoparsec 
+            Empty r     -> Return (Right r)
+            Chunk bs p1 | B.null bs -> begin p1
+                        | otherwise -> step (chunk bs >>) (A.parse parser bs) p1
     step diffP res p0 = case res of
-      A.Fail _ c m -> Return (Left ((c,m), diffP p0))
-      A.Done bs b  -> Step (b :> go (chunk bs >> p0))
+      A.Fail _ c m -> Return (Left ((m,c), diffP p0))
+      A.Done bs a  | B.null bs -> Step (a :> begin p0) 
+                   | otherwise -> Step (a :> begin (chunk bs >> p0))
       A.Partial k  -> do
         x <- lift (nextChunk p0)
         case x of
           Left e -> step diffP (k mempty) (return e)
-          Right (a,p1) -> step (diffP . (chunk a >>)) (k a) p1
+          Right (bs,p1) | B.null bs -> step diffP res p1
+                        | otherwise  -> step (diffP . (chunk bs >>)) (k bs) p1
 {-# INLINABLE parsed #-}
-
--- | Run a parser and return its result, using @StateT (ByteString m x)@ in the style
--- of pipes parse
--- atto :: Monad m => A.Parser a -> StateT (ByteString m x) m (Result a)
--- atto p = StateT (parse p)
-
--- atto_ :: Monad m => A.Parser a -> ExceptT ([String], String) (StateT (ByteString m x) m) a
--- atto_ p = ExceptT $ StateT loop where
---   loop s  = case s of
---       Chunk x xs -> go (A.parse p x) xs
---       Empty r    -> go (A.parse p B.empty) (Empty r)
---       Go m       -> m >>= loop
---
---   go (T.Fail x stk msg) ys      = return $ (Left (stk, msg), Chunk x ys)
---   go (T.Done x r) ys            = return $ (Right r, Chunk x ys)
---   go (T.Partial k) (Chunk y ys) = go (k y) ys
---   go (T.Partial k) (Go m)       = m >>= go (T.Partial k)
---   go (T.Partial k) blank        = go (k B.empty) blank
-
-
