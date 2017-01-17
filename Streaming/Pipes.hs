@@ -1,14 +1,22 @@
 {-| "Pipes.Group.Tutorial" is the correct introduction to the use of this module,
     which is mostly just an optimized @Pipes.Group@, replacing @FreeT@ with @Stream@. 
+    The module also includes optimized functions for interoperation:
+
+> fromStream :: Monad m => Stream (Of a) m r -> Producer' a m r
+> toStream :: Monad m => Producer a m r -> Stream (Of a) m r
     .
-    The only systematic difference is that this simple module omits lenses, which 
+    It is not a drop in replacement for @Pipes.Group@. The only systematic difference
+    is that this simple module omits lenses. It is hoped that this will
     may make elementary usage easier to grasp. The lenses exported the pipes packages
-    come into their own with the simple @StateT@ parsing procedure pipes promotes.
-    I hope to make a corresponding @Streaming.Pipes.Lens@ soon.
+    only come into their own with the simple @StateT@ parsing procedure pipes promotes. 
+    We are not attempting here to replicate this advanced procedure, but only to make 
+    elementary forms of breaking and splitting possible in the simplest possible way.
     .
     The @pipes-group@ tutorial 
     is framed as a hunt for a genuinely streaming
-    @threeGroups@. The formulation it opts for in the end would 
+    @threeGroups@, which would collect the first three groups of matching items while
+    never holding more than the present item in  memory. 
+    The formulation it opts for in the end would 
     be expressed here thus:
 
 > import Pipes
@@ -28,7 +36,11 @@
 'b'
 'c'
 'c'
-
+ 
+   The new user might look at the examples of splitting, breaking and joining
+   in @Streaming.Prelude@ keeping in mind that @Producer a m r@ is equivalent
+   to @Stream (Of a) m r@.
+   .
    For the rest, only part of the tutorial that would need revision is 
    the bit at the end about writing explicit @FreeT@ programs. Here one does
    not proceed by pattern matching, but uses `inspect` in place of `runFreeT`
@@ -47,8 +59,6 @@
 -}
 
 {-#LANGUAGE RankNTypes, BangPatterns #-}
-
-
 
 module Streaming.Pipes (
   -- * @Streaming@ \/ @Pipes@ interoperation
@@ -185,6 +195,7 @@ span predicate = loop where
 -}
 break :: Monad m => (a -> Bool) -> Producer a m r -> Producer a m (Producer a m r)
 break predicate = span (not . predicate)
+{-#INLINE break #-}
 
 split :: (Eq a, Monad m) =>
       a -> Producer a m r -> Stream (Producer a m) m r
