@@ -36,16 +36,12 @@ import Data.ByteString.Streaming.Internal (ByteString (..))
 
 --------------------------------------------------------------------------------
 
--- | Decompress a deflate-compressed byte stream.
---
--- See the "Codec.Compression.Zlib" module for details about 'Z.WindowBits'.
+-- | Decompress a streaming bytestring. 'Z.WindowBits' is from "Codec.Compression.Zlib" 
 --
 -- @
--- 'decompress' :: 'MonadIO' m
---            => 'Z.WindowBits'
---            => 'ByteString' m r
---            -> 'ByteString' m r
+-- 'decompress' 'defaultWindowBits' :: 'MonadIO' m => 'ByteString' m r -> 'ByteString' m r
 -- @
+
 decompress
   :: MonadIO m
   => Z.WindowBits

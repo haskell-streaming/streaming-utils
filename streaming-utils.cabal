@@ -59,7 +59,6 @@ library
                        , Streaming.Pipes
                        , Streaming.Network.TCP
                        , Streaming.Zip
-  --                     , Streaming.Pipes.Concurrent
 
   -- other-modules:       
   other-extensions:    CPP, Trustworthy
@@ -68,8 +67,8 @@ library
                        transformers >=0.4 && <0.5.3, 
                        mtl >=2.2 && <2.3,
                        attoparsec > 0.13.0.0 && < 0.13.2.0,
-                       streaming >=  0.1.4.0 && < 0.1.4.6,
-                       streaming-bytestring >= 0.1.4.0 && < 0.1.4.6,
+                       streaming >=  0.1.4.0 && < 0.1.4.8,
+                       streaming-bytestring >= 0.1.4.0 && < 0.1.4.8,
                        bytestring > 0.10.0 && < 0.11.0,
                        pipes >= 4.0 && < 4.3,
                        network-simple,
