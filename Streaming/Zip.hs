@@ -87,14 +87,11 @@ decompress' wbits p0 = go p0 =<< liftIO (Z.initInflate wbits)
 --
 -- See the "Codec.Compression.Zlib" module for details about
 -- 'Z.CompressionLevel' and 'Z.WindowBits'.
---
+
 -- @
--- 'compress' :: 'MonadIO' m
---          => 'Z.CompressionLevel'
---          -> 'Z.WindowBits'
---          -> 'ByteString' m r
---          -> 'ByteString' m r
+-- 'compress' 'defaultCompression' 'defaultWindowBits' :: 'MonadIO' m => 'ByteString' m r -> 'ByteString' m r
 -- @
+-- 
 compress
   :: MonadIO m
   => CompressionLevel
@@ -145,12 +142,7 @@ windowBits :: Int -> WindowBits
 windowBits = WindowBits
 
 -- | Decompress a gzipped byte stream.
---
--- @
--- 'gunzip' :: 'MonadIO' m
---            => 'ByteString' m r
---            -> 'ByteString' m r
--- @
+
 gunzip
   :: MonadIO m
   => ByteString m r -- ^ Compressed stream
@@ -171,13 +163,7 @@ gunzip' = decompress' gzWindowBits
 
 
 -- | Compress a byte stream in the gzip format.
---
--- @
--- 'gzip' :: 'MonadIO' m
---          => 'ZC.CompressionLevel'
---          -> 'ByteString' m r
---          -> 'ByteString' m r
--- @
+
 gzip
   :: MonadIO m
   => CompressionLevel

@@ -1,5 +1,5 @@
 name:                streaming-utils
-version:             0.1.4.4
+version:             0.1.4.5
 synopsis:            http, attoparsec, pipes and other utilities for the streaming libraries
 
 description:         This package includes http-client, aeson, attoparsec, zlib and pipes utilities for use with
@@ -71,13 +71,12 @@ library
                        streaming >=  0.1.4.0 && < 0.1.4.8,
                        streaming-bytestring >= 0.1.4.0 && < 0.1.4.8,
                        bytestring > 0.10.0 && < 0.11.0,
-                       pipes >= 4.0 && < 4.3,
+                       pipes >= 4.0 && < 4.4,
                        network-simple,
                        network, 
-                 --      pipes-concurrency >= 2.0 && < 2.1, 
                        http-client >=0.2 && <0.6, 
                        http-client-tls,
-                       aeson > 0.8 && <0.11.3,
+                       aeson > 0.8 && <1.2,
                        json-stream > 0.4.0 && < 0.4.2,
                        resourcet > 1.0 && < 1.2,
                        streaming-commons > 0.1.0 && < 0.1.17
