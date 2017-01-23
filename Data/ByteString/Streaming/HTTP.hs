@@ -10,7 +10,7 @@
 -- > import Data.ByteString.Streaming.HTTP
 -- >
 -- > main = do
--- >   req <- parseUrl "https://www.example.com"
+-- >   req <- parseRequest "https://www.example.com"
 -- >   m <- newManager tlsManagerSettings 
 -- >   withHTTP req m $ \resp -> Q.stdout (responseBody resp) 
 -- > 
@@ -23,7 +23,7 @@
 -- > import Data.ByteString.Streaming.HTTP
 -- > 
 -- > main = do
--- >    req <- parseUrl "https://www.example.com"
+-- >    req <- parseRequest "https://httpbin.org/post"
 -- >    let req' = req
 -- >            { method = "POST"
 -- >            , requestBody = stream Q.stdin

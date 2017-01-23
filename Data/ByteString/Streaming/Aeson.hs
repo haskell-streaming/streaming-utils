@@ -34,7 +34,7 @@
 > import Data.Text (Text)
 > import Data.Function ((&))
 > main = do
->    req <- parseUrl "https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json"
+>    req <- parseRequest "https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json"
 >    m <- newManager tlsManagerSettings
 >    withHTTP req m $ \resp -> do 
 >      let names, friend_names :: Parser Text

@@ -1,5 +1,5 @@
 name:                streaming-utils
-version:             0.1.4.6
+version:             0.1.4.7
 synopsis:            http, attoparsec, pipes and other utilities for the streaming libraries
 
 description:         This package includes http-client, aeson, attoparsec, zlib and pipes utilities for use with
@@ -79,7 +79,7 @@ library
                        aeson > 0.8 && <1.2,
                        json-stream > 0.4.0 && < 0.4.2,
                        resourcet > 1.0 && < 1.2,
-                       streaming-commons > 0.1.0 && < 0.1.17
+                       streaming-commons > 0.1.0 && < 0.1.18
                       
   -- hs-source-dirs:      
   default-language:    Haskell2010
