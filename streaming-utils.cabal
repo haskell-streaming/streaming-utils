@@ -79,6 +79,7 @@ library
                        json-stream > 0.4 && < 0.5,
                        resourcet > 1.0 && < 1.3,
                        streaming-commons > 0.2 && < 0.3
-                      
+
+  pkgconfig-depends: zlib
   -- hs-source-dirs:      
   default-language:    Haskell2010
