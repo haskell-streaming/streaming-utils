@@ -122,7 +122,7 @@ import qualified Data.ByteString.Streaming.Internal as Q
 3
 
 -}
-fromStream :: Monad m => Stream (Of a) m r -> Producer' a m r
+fromStream :: Monad m => Stream (Of a) m r -> Proxy x' x () a m r
 fromStream = loop where
   loop stream = case stream of -- this should be rewritten without constructors
     SI.Return r -> PI.Pure r
@@ -161,7 +161,7 @@ toStreamingByteString = loop where
 
 {-| Successively yield the chunks hidden in a byte stream. 
 -}
-fromStreamingByteString :: Monad m => Q.ByteString m r -> Producer' B.ByteString m r
+fromStreamingByteString :: Monad m => Q.ByteString m r -> Proxy x' x () B.ByteString m r
 fromStreamingByteString = loop where
   loop stream = case stream of -- this should be rewritten without constructors
     Q.Empty r      -> PI.Pure r
