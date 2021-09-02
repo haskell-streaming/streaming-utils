@@ -73,7 +73,7 @@ library
                        pipes >= 4.0 && < 4.4,
                        network-simple,
                        network, 
-                       http-client >=0.2 && <0.7, 
+                       http-client >=0.2 && <0.8, 
                        http-client-tls,
                        aeson > 0.8 && <1.6,
                        json-stream > 0.4 && < 0.5,
