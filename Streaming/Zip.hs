@@ -28,7 +28,7 @@ import           Data.Streaming.Zlib       as Z
 import           Control.Exception         (throwIO)
 import           Control.Monad             (unless)
 import qualified Data.ByteString           as B
-import Data.ByteString.Streaming 
+import Data.ByteString.Streaming hiding (for)
 import Streaming
 import qualified Data.ByteString.Streaming.Internal as I 
 import Data.ByteString.Streaming.Internal (ByteString (..)) 
