@@ -46,11 +46,11 @@ category:            Data, Pipes, Streaming
 -- extra-source-files:  
 cabal-version:       >=1.10
 stability:           Experimental
-homepage:            https://github.com/michaelt/streaming-utils
-bug-reports:         https://github.com/michaelt/streaming-utils/issues
+homepage:            https://github.com/haskell-streaming/streaming-utils
+bug-reports:         https://github.com/haskell-streaming/streaming-utils/issues
 source-repository head
     type: git
-    location: https://github.com/michaelt/streaming-utils
+    location: https://github.com/haskell-streaming/streaming-utils
 
 library
   exposed-modules:     Data.Attoparsec.ByteString.Streaming
