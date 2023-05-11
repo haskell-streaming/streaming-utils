@@ -68,7 +68,7 @@ library
                        mtl >=2.2 && <2.3,
                        attoparsec > 0.13.0.0 && < 0.15,
                        streaming >=  0.2 && < 0.3,
-                       streaming-bytestring >= 0.1 && < 0.3,
+                       streaming-bytestring >= 0.1 && < 0.4,
                        bytestring > 0.10 && < 0.12,
                        pipes >= 4.0 && < 4.4,
                        network-simple,
