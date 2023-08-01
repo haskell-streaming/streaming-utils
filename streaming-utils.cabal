@@ -64,8 +64,8 @@ library
   other-extensions:    CPP, Trustworthy
 
   build-depends:       base >=4.8 && <5.0,
-                       transformers >=0.4 && <0.6,
-                       mtl >=2.2 && <2.3,
+                       transformers >=0.4 && <0.7,
+                       mtl >=2.2 && <2.4,
                        attoparsec > 0.13.0.0 && < 0.15,
                        streaming >=  0.2 && < 0.3,
                        streaming-bytestring >= 0.1 && < 0.4,
