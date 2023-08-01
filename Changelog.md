@@ -1,3 +1,8 @@
+# 0.2.5.0
+
+- Build with `mtl-2.3`
+- Build with `transformers-0.6`
+
 # 0.2.4.0
 
 - Build with `streaming-bytestring-0.3.0`
