@@ -1,26 +1,26 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE RankNTypes         #-}
-{- | The @encode@, @decode@ and @decoded@ functions replicate 
-     the similar functions in Renzo Carbonara's 
+{- | The @encode@, @decode@ and @decoded@ functions replicate
+     the similar functions in Renzo Carbonara's
      <http://hackage.haskell.org/package/pipes-aeson pipes-aeson> .
      Note that @aeson@ accumulates a whole top level json array or object before coming to any conclusion.
-     This is the only default that could cover all cases. 
+     This is the only default that could cover all cases.
 
-     The @streamParse@ function accepts parsers from the 
+     The @streamParse@ function accepts parsers from the
      <http://hackage.haskell.org/package/json-stream json-streams> library.
      The 'json-streams' parsers use aeson types, but will stream suitable elements
-     as they arise.  For this reason, of course, it cannot validate the entire json 
-     entity before acting, but carries on validation as it moves along, reporting 
+     as they arise.  For this reason, of course, it cannot validate the entire json
+     entity before acting, but carries on validation as it moves along, reporting
      failure when it comes. Though it is generally faster and accumulates less memory than
-     the usual aeson parsers, it is by no means a universal replacement for 
-     aeson\'s behavior.  It will certainly be sensible, for example, wherever 
+     the usual aeson parsers, it is by no means a universal replacement for
+     aeson\'s behavior.  It will certainly be sensible, for example, wherever
      you are executing a left fold over the subordinate elements, e.g. gathering certain
-     statistics about them. 
+     statistics about them.
 
-     Here we use a long top level array of objects from 
-     <https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json a file> 
-     @json-streams@ benchmarking directory. Each object in the top level array 
+     Here we use a long top level array of objects from
+     <https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json a file>
+     @json-streams@ benchmarking directory. Each object in the top level array
      has a \"friends\" field with an assocated array of friends; each of these has a \"name\".
      Here, we extract the name of each friend of each person recorded in the level array, and
      enumerate them all:
@@ -28,7 +28,7 @@
 > {-#LANGUAGE OverloadedStrings #-}
 > import Streaming
 > import qualified Streaming.Prelude as S
-> import Data.ByteString.Streaming.HTTP 
+> import Data.ByteString.Streaming.HTTP
 > import Data.ByteString.Streaming.Aeson (streamParse)
 > import Data.JsonStream.Parser (string, arrayOf, (.:), Parser)
 > import Data.Text (Text)
@@ -36,7 +36,7 @@
 > main = do
 >    req <- parseRequest "https://raw.githubusercontent.com/ondrap/json-stream/master/benchmarks/json-data/buffer-builder.json"
 >    m <- newManager tlsManagerSettings
->    withHTTP req m $ \resp -> do 
+>    withHTTP req m $ \resp -> do
 >      let names, friend_names :: Parser Text
 >          names = arrayOf ("name" .: string)
 >          friend_names = arrayOf ("friends" .: names)
@@ -53,10 +53,10 @@
 > -- (287,"Hilda Craig")
 > -- (288,"Leola Higgins")
 
-   This program does not accumulate the whole byte stream, as an aeson parser 
-   for a top-level json entity would. Rather it streams and enumerates 
+   This program does not accumulate the whole byte stream, as an aeson parser
+   for a top-level json entity would. Rather it streams and enumerates
    friends\' names as soon as they come. With appropriate instances, we could
-   of course just stream the objects in the top-level array instead. 
+   of course just stream the objects in the top-level array instead.
 
 -}
 
@@ -74,13 +74,14 @@ import qualified Control.Monad.Trans.State.Strict as S
 import           Control.Monad.Trans.State.Strict (StateT(..))
 
 import qualified Data.Aeson                       as Ae
+import qualified Data.Aeson.Parser                as Ae
 import qualified Data.Attoparsec.ByteString       as Attoparsec
 import qualified Data.ByteString                  as S
 import qualified Data.ByteString.Internal         as S (isSpaceWord8)
 import           Data.Data                        (Data, Typeable)
 -- import           Pipes
 import qualified Data.Attoparsec.ByteString.Streaming  as PA
-import           Data.ByteString.Streaming 
+import           Data.ByteString.Streaming
 import Data.ByteString.Streaming.Internal
 import qualified Data.ByteString.Streaming as B
 import Streaming
@@ -128,7 +129,7 @@ encode = fromLazy . Ae.encode
 
 
 {-| Given a bytestring, parse a top level json entity - returning any leftover
-    bytes. 
+    bytes.
 -}
 decode
   :: (Monad m, Ae.FromJSON a)
@@ -142,18 +143,18 @@ decode = do
             Ae.Success a -> Right a
 
 {-| Resolve a succession of top-level json items into a corresponding stream of Haskell
-    values. 
-            
+    values.
+
 -}
 decoded  :: (Monad m, Ae.FromJSON a) =>
      ByteString m r
      -> Stream (Of a) m (Either (DecodingError, ByteString m r) r)
-decoded = consecutively decode 
+decoded = consecutively decode
   where
   consecutively
     :: (Monad m)
     => StateT (ByteString m r) m (Either e a)
-    -> ByteString m r  
+    -> ByteString m r
     -> Stream (Of a) m (Either (e, ByteString m r) r)
   consecutively parser = step where
     step p0 = do
@@ -163,12 +164,12 @@ decoded = consecutively decode
         Right (bs, p1) -> do
           (mea, p2) <- lift $ S.runStateT parser (Chunk bs p1)
           case mea of
-            Right a -> do 
+            Right a -> do
               yield a
               step p2
             Left  e -> Return (Left (e, p2))
 
-  
+
   nextSkipBlank p0 = do
         x <- nextChunk p0
         case x of
@@ -178,43 +179,43 @@ decoded = consecutively decode
               if S.null a' then nextSkipBlank p1
                            else return (Right (a', p1))
 
-{- | Experimental. Parse a bytestring with a @json-streams@ parser. 
+{- | Experimental. Parse a bytestring with a @json-streams@ parser.
      The function will read through
      the whole of a single top level json entity, streaming the valid parses as they
      arise. (It will thus for example parse an infinite json bytestring, though these
-     are rare in practice ...) 
-                           
-     If the parser is fitted to recognize only one thing, 
-     then zero or one item will be yielded; if it uses combinators like @arrayOf@, 
+     are rare in practice ...)
+
+     If the parser is fitted to recognize only one thing,
+     then zero or one item will be yielded; if it uses combinators like @arrayOf@,
      it will stream many values as they arise. See the example at the top of this module,
      in which values inside a top level array are emitted as they are parsed. Aeson would
      accumulate the whole bytestring before declaring on the contents of the array.
-     This of course makes sense, since attempt to parse a json array may end with 
-     a bad parse, invalidating the json as a whole.  With @json-streams@, a bad 
+     This of course makes sense, since attempt to parse a json array may end with
+     a bad parse, invalidating the json as a whole.  With @json-streams@, a bad
      parse will also of course emerge in the end, but only after the initial good parses
-     are streamed. This too makes sense though, but in a smaller range of contexts 
+     are streamed. This too makes sense though, but in a smaller range of contexts
      -- for example, where one is folding over the parsed material.
-      
-                           
-     This function is closely modelled on 
-     'Data.JsonStream.Parser.parseByteString' and 
+
+
+     This function is closely modelled on
+     'Data.JsonStream.Parser.parseByteString' and
      'Data.JsonStream.Parser.parseLazyByteString' from @Data.JsonStream.Parser@.
-                           
+
       -}
 streamParse
   :: (Monad m) =>
      J.Parser a
-     -> ByteString m r 
+     -> ByteString m r
      -> Stream (Of a) m (Maybe String, ByteString m r)
 streamParse parser input = loop input (J.runParser parser)  where
-  loop bytes p0 = case p0 of 
+  loop bytes p0 = case p0 of
     ParseFailed s -> return (Just s,bytes)
     ParseDone bs  -> return (Nothing, chunk bs >> bytes)
     ParseYield a p1 -> yield a >> loop bytes p1
-    ParseNeedData f -> do 
+    ParseNeedData f -> do
        e <- lift $ nextChunk bytes
        case e of
          Left r    -> return (Just "Not enough data",return r)
          Right (bs, rest) -> loop rest (f bs)
 
-                           
+

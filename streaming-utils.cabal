@@ -69,15 +69,16 @@ library
                        attoparsec > 0.13.0.0 && < 0.15,
                        streaming >=  0.2 && < 0.3,
                        streaming-bytestring >= 0.1 && < 0.4,
-                       bytestring > 0.10 && < 0.12,
+                       bytestring > 0.10 && < 0.13,
                        pipes >= 4.0 && < 4.4,
                        network-simple,
                        network,
                        http-client >=0.2 && <0.8,
                        http-client-tls,
-                       aeson > 0.8 && <2.2,
+                       aeson >=2.2 && <2.3,
+                       attoparsec-aeson,
                        json-stream > 0.4 && < 0.5,
-                       resourcet > 1.0 && < 1.3,
+                       resourcet > 1.0 && < 1.4,
                        streaming-commons > 0.2 && < 0.3
 
   pkgconfig-depends: zlib
