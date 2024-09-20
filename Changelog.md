@@ -1,3 +1,7 @@
+# 0.2.6.0
+
+- Bump `aeson`, `resourcet` and `bytestring` upper-bounds.
+
 # 0.2.5.0
 
 - Build with `mtl-2.3`
